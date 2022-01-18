@@ -20,6 +20,7 @@ import isBuiltinModule from './isBuiltinModule';
 import nodeModulesPaths from './nodeModulesPaths';
 import shouldLoadAsEsm, {clearCachedLookups} from './shouldLoadAsEsm';
 import type {ResolverConfig} from './types';
+import { existsSync } from 'fs';
 
 type FindNodeModuleConfig = {
   basedir: Config.Path;
@@ -235,6 +236,11 @@ export default class Resolver {
     options?: ResolveModuleConfig,
   ): Config.Path {
     const dirname = path.dirname(from);
+    // auto replace moduleName when  `.js` module not exists and `.ts` module exists,
+    const modulePath = path.join(dirname,moduleName);
+    if(/\.js$/i.test(modulePath) && existsSync(modulePath) === false && existsSync(modulePath.replace(/\.js$/i,'.ts'))){
+      moduleName = moduleName.replace(/\.js$/,'.ts');
+    }
     const module =
       this.resolveStubModuleName(from, moduleName) ||
       this.resolveModuleFromDirIfExists(dirname, moduleName, options);
